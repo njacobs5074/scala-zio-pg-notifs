@@ -28,7 +28,7 @@ class ModelTest extends FlatSpec {
 
     val runtime: Runtime[PostgresIO] = Runtime(new PostgresIO {
         Class.forName("org.postgresql.Driver")
-        override val connection: Connection = DriverManager.getConnection("jdbc:postgresql://localhost:5411/nick", "nick", "")
+        override val connection: Connection = DriverManager.getConnection("jdbc:postgresql://localhost:5411/zio_pg_notifs", "nick", "")
       }, PlatformLive.Default)
 
     val jobs = runtime.unsafeRun(example)
