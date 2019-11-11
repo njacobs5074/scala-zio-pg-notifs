@@ -1,39 +1,18 @@
 package tests
 
-import java.sql.{ Connection, Date, DriverManager }
+import java.sql.Date
 
 import model.{ Job, JobRepository, JobStatus }
 import org.scalatest.FlatSpec
-import play.api.libs.json.Json
-import wrappers.pgnotifs.PostgresIO
-import zio.Runtime
-import zio.internal.PlatformLive
 
 class ModelTest extends FlatSpec {
-  val DUMMY_DETAILS = Json.parse(
-    """
-      |{
-      | "data": 20
-      |}
-      |""".stripMargin
-  )
-
   "Jobs repository" should "insert job" in {
-    val example =
-      for {
-        _ <- JobRepository.deleteAllJobs()
-        _ <- JobRepository.addJob(Job(DUMMY_DETAILS, JobStatus.New, new Date(System.currentTimeMillis())))
-        jobs <- JobRepository.getNewJobs
-      } yield jobs
+    val jobs = runtime.unsafeRun(for {
+      _ <- JobRepository.deleteAllJobs()
+      _ <- JobRepository.addJob(Job(DUMMY_DETAILS, JobStatus.New, new Date(System.currentTimeMillis())))
+      jobs <- JobRepository.getNewJobs
+    } yield jobs)
 
-    val runtime: Runtime[PostgresIO] = Runtime(new PostgresIO {
-        Class.forName("org.postgresql.Driver")
-        override val connection: Connection = DriverManager.getConnection("jdbc:postgresql://localhost:5411/zio_pg_notifs", "nick", "")
-      }, PlatformLive.Default)
-
-    val jobs = runtime.unsafeRun(example)
-
-    assert(jobs.length == 1)
+    assert(jobs.length == 1 && jobs.head.jobStatus == JobStatus.New)
   }
-
 }
