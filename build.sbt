@@ -4,6 +4,7 @@ version := "0.1"
 
 scalaVersion := "2.12.10"
 
+// Because our tests use a real database, running them in parallel can break things.
 parallelExecution in Test := false
 
 libraryDependencies += "dev.zio" %% "zio" % "1.0.0-RC16"

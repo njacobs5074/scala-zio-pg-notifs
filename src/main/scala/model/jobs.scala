@@ -41,6 +41,9 @@ object Job {
 
 object JobRepository {
 
+  // This is also hard-coded in the /resources/db/jobs.sql script
+  val JOBS_CHANNEL = "jobs_status_channel"
+
   def addJob(job: Job): ZIO[PostgresIO, Throwable, Unit] = PostgresIO.effect { connection =>
     val sql = "INSERT INTO jobs(details, status, status_change_time) VALUES(to_json(?::json), ?::job_status, ?)"
     val stmt = connection.prepareStatement(sql)

@@ -1,6 +1,6 @@
 package wrappers.pgnotifs
 
-import java.sql.{ Connection, SQLException }
+import java.sql.Connection
 
 import org.postgresql.PGConnection
 import zio.ZIO
@@ -32,6 +32,8 @@ object PostgresIO {
 
   /** Get the ID's from any database records that have been created or updated. We assume that record ID's are longs  */
   def getChannelNotifications(channelName: String): ZIO[PostgresIO, Throwable, List[Long]] = effect { connection =>
-    connection.unwrap(classOf[PGConnection]).getNotifications.toList.filter(_.getName == channelName).map(_.getParameter.toLong)
+    Option(connection.unwrap(classOf[PGConnection]).getNotifications)
+      .map(_.toList.filter(_.getName == channelName).map(_.getParameter.toLong))
+      .getOrElse(List.empty)
   }
 }
