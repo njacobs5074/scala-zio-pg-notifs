@@ -32,10 +32,10 @@ case class Job(details: JsValue,
 
 object Job {
   def apply(rs: ResultSet): Job = new Job(
-    Json.parse(rs.getString(1)),
-    JobStatus.valueMap(rs.getString(2)),
-    rs.getDate(3),
-    rs.getLong(4)
+    Json.parse(rs.getString("details")),
+    JobStatus.valueMap(rs.getString("status")),
+    rs.getDate("status_change_time"),
+    rs.getLong("id")
   )
 }
 
@@ -76,7 +76,7 @@ object JobRepository {
     val sql = "UPDATE jobs set details = to_json(?::json), status = ?, status_change_time = ? where id = ?"
     val stmt = connection.prepareStatement(sql)
     stmt.setString(1, job.details.toString)
-    stmt.setString(2, job.jobStatus.toString)
+    stmt.setString(2, job.jobStatus.value)
     stmt.setObject(3, job.statusChangeTime)
     stmt.setLong(4, job.id)
     val numUpdated = stmt.executeUpdate()
@@ -90,6 +90,32 @@ object JobRepository {
         // Should never happen
         throw new RuntimeException(s"Updated $other jobs with id ${job.id}: check table def'n")
     }
+  }
+
+  def claimJob(): ZIO[PostgresIO, Throwable, Option[Job]] = PostgresIO.effect { connection =>
+    val sql = """
+                |UPDATE jobs SET status=?::job_status
+                |WHERE id = (
+                |  SELECT id
+                |  FROM jobs
+                |  WHERE status=?::job_status
+                |  ORDER BY id
+                |  FOR UPDATE SKIP LOCKED
+                |  LIMIT 1
+                |)
+                |RETURNING *;
+                |""".stripMargin
+
+    val stmt = connection.prepareStatement(sql)
+    stmt.setObject(1, JobStatus.Initializing.value)
+    stmt.setObject(2, JobStatus.New.value)
+    val maybeJob = if (stmt.execute()) {
+      Option(stmt.getResultSet).flatMap(entries(_)(Job.apply).toList.headOption)
+    } else {
+      None
+    }
+    stmt.close()
+    maybeJob
   }
 
   def deleteAllJobs(): ZIO[PostgresIO, Throwable, Int] = PostgresIO.effect { connection =>

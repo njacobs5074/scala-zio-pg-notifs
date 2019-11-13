@@ -46,4 +46,20 @@ class NotificationsTest extends FlatSpec {
     assert(newJobs01.length == 1)
     assert(newJobs02.length == 2)
   }
+
+  it should "claim 1 job after 1 new job has been inserted" in {
+    val (notifs, claimedJob) = runtime.unsafeRun(for {
+      // Clear the jobs table.
+      _ <- JobRepository.deleteAllJobs()
+
+      _ <- PostgresIO.startChannelNotifications(JobRepository.JOBS_CHANNEL)
+      _ <- JobRepository.addJob(Job(DUMMY_DETAILS, JobStatus.New, new Date(System.currentTimeMillis())))
+      notifs <- PostgresIO.getChannelNotifications(JobRepository.JOBS_CHANNEL)
+      claimedJob <- JobRepository.claimJob()
+    } yield (notifs, claimedJob))
+
+    assert(notifs.length == 1)
+    assert(claimedJob.isDefined)
+    assert(claimedJob.exists(_.id == notifs.head))
+  }
 }
