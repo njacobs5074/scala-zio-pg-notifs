@@ -13,7 +13,7 @@ class NotificationsTest extends FlatSpec {
       _ <- JobRepository.deleteAllJobs()
       _ <- PostgresIO.startChannelNotifications(JobRepository.JOBS_CHANNEL)
       _ <- JobRepository.addJob(Job(DUMMY_DETAILS, JobStatus.New, new Date(System.currentTimeMillis())))
-      notifs <- PostgresIO.getChannelNotifications("jobs_status_channel")
+      notifs <- PostgresIO.getChannelNotifications(JobRepository.JOBS_CHANNEL)
       jobs <- JobRepository.getNewJobs
     } yield (jobs, notifs))
 

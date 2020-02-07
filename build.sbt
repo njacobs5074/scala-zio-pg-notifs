@@ -7,7 +7,7 @@ scalaVersion := "2.12.10"
 // Because our tests use a real database, running them in parallel can break things.
 parallelExecution in Test := false
 
-libraryDependencies += "dev.zio" %% "zio" % "1.0.0-RC16"
+libraryDependencies += "dev.zio" %% "zio" % "1.0.0-RC17"
 
 libraryDependencies += "org.postgresql" % "postgresql" % "42.2.8"
 
