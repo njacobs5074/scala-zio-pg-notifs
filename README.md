@@ -2,7 +2,7 @@
 
 Simple Scala project that combines using [ZIO](https://zio.dev) and Postgres notifications. Inspired by 
 [System design hack: Postgres is a great pub/sub & job server](https://layerci.com/blog/postgres-is-the-answer/) written
-by Colin Chartier.
+by Colin Chartier. Also a tip o' the hat to this [project](https://gitlab.com/earldouglas/zio-jdbc) by James Earl Douglas that wraps JDBC with ZIO.
 
 ## Database
 This project requires an actual database. I used PostgreSQL 11.5 but the features used herein has been available
